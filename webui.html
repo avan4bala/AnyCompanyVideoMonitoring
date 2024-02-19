@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnyCompany Database Query</title>
+    <script src="https://unpkg.com/aws-sdk/dist/aws-sdk.min.js"></script>
+    <script>
+        // Initialize AWS SDK
+        AWS.config.update({ region: 'us-east-1' });
+        var dynamodb = new AWS.DynamoDB.DocumentClient();
+
+        // Function to query DynamoDB table
+        function queryDynamoDB() {
+            var searchTerm = document.getElementById('searchTerm').value.trim();
+
+            var params = {
+                TableName: 'anycompany',
+                KeyConditionExpression: '#p = :propValue',
+                ExpressionAttributeNames: {
+                    '#p': 'properties'
+                },
+                ExpressionAttributeValues: {
+                    ':propValue': searchTerm
+                }
+            };
+
+            dynamodb.query(params, function(err, data) {
+                if (err) {
+                    console.error('Unable to query. Error:', JSON.stringify(err, null, 2));
+                    alert('Error querying DynamoDB: ' + err.message);
+                } else {
+                    console.log('Query succeeded.', JSON.stringify(data, null, 2));
+                    displayResults(data.Items);
+                }
+            });
+        }
+
+        // Function to display query results
+        function displayResults(results) {
+            var resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+
+            if (results.length === 0) {
+                resultsDiv.innerHTML = '<p>No results found.</p>';
+            } else {
+                var ul = document.createElement('ul');
+                results.forEach(function(item) {
+                    var li = document.createElement('li');
+                    li.textContent = 'Value: ' + item.value;
+                    ul.appendChild(li);
+                });
+                resultsDiv.appendChild(ul);
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>AnyCompany Database Query</h1>
+    <input type="text" id="searchTerm" placeholder="Enter search term...">
+    <button onclick="queryDynamoDB()">Search</button>
+    <div id="results"></div>
+</body>
+</html>
